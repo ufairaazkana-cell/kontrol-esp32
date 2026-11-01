@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Relay Control - MQTT Web</title>
+    <!-- Memuat library MQTT.js melalui CDN -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f9;
+            margin-top: 50px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 20px auto;
+            width: 300px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 12px 24px;
+            margin: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: white;
+        }
+        .btn-on { background-color: #28a745; }
+        .btn-on:hover { background-color: #218838; }
+        .btn-off { background-color: #dc3545; }
+        .btn-off:hover { background-color: #c82333; }
+        #status {
+            font-weight: bold;
+            color: #d9534f;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Kontrol Relay IoT via Web</h2>
+    <p id="status">Status: Menghubungkan ke Broker...</p>
+
+    <div class="card">
+        <h3>Relay 1</h3>
+        <button class="btn-on" onclick="publishMessage('esp32/relay1', 'ON')">ON</button>
+        <button class="btn-off" onclick="publishMessage('esp32/relay1', 'OFF')">OFF</button>
+    </div>
+
+    <div class="card">
+        <h3>Relay 2</h3>
+        <button class="btn-on" onclick="publishMessage('esp32/relay2', 'ON')">ON</button>
+        <button class="btn-off" onclick="publishMessage('esp32/relay2', 'OFF')">OFF</button>
+    </div>
+
+    <script>
+        // Menghubungkan ke broker publik HiveMQ menggunakan WebSocket Secure (WSS)
+        const brokerUrl = 'wss://broker.hivemq.com:8884/mqtt';
+        const client = mqtt.connect(brokerUrl);
+
+        client.on('connect', function () {
+            const statusEl = document.getElementById('status');
+            statusEl.innerText = 'Status: Terhubung ke Broker MQTT';
+            statusEl.style.color = '#28a745';
+            console.log("Berhasil terhubung ke broker MQTT via WebSocket");
+        });
+
+        client.on('error', function (error) {
+            const statusEl = document.getElementById('status');
+            statusEl.innerText = 'Status: Gagal Terhubung';
+            statusEl.style.color = '#dc3545';
+            console.error("Koneksi gagal: ", error);
+        });
+
+        // Fungsi untuk mengirim perintah ke ESP32
+        function publishMessage(topic, message) {
+            client.publish(topic, message, function (err) {
+                if (!err) {
+                    console.log(`Pesan terkirim: [${message}] ke topik [${topic}]`);
+                } else {
+                    console.error("Gagal mengirim pesan", err);
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
